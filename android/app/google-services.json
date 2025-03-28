@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "671718312680",
+    "project_id": "sheride-48cbf",
+    "storage_bucket": "sheride-48cbf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671718312680:android:1a76b4b0fe982ce5f9d75d",
+        "android_client_info": {
+          "package_name": "com.example.sheride"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKjDIwnhAiHxitrKFTKqN_O7YT5LsvLxM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
