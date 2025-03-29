@@ -1,11 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
+import 'package:logger/web.dart';
 import 'package:sheride/views/auth/otp.dart';
+import 'package:sheride/views/auth/register.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
+
+  Logger logger = Logger();
 
   final TextEditingController _mobile_number_controller =
       TextEditingController();
@@ -118,20 +123,136 @@ class LoginPage extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              onPressed: () {
-                                String completeNumber =
-                                    _phoneNumber!.completeNumber;
-
-                                // Passing the mobile number to the next page
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => OtpVerifyPage(
-                                          mobileNumber: completeNumber,
+                              // Function for Login Login
+                              onPressed: () async {
+                                try {
+                                  if (_phoneNumber == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          "Please enter a valid phone number",
                                         ),
-                                  ),
-                                );
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  String completeNumber =
+                                      _phoneNumber!.completeNumber;
+
+                                  // Show loading indicator
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder:
+                                        (context) => Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                  );
+
+                                  await FirebaseAuth.instance.verifyPhoneNumber(
+                                    phoneNumber: completeNumber,
+                                    verificationCompleted: (
+                                      phoneAuthCredential,
+                                    ) async {
+                                      Navigator.pop(context); // Remove loading
+
+                                      try {
+                                        // Try to sign in with the credential
+                                        UserCredential userCredential =
+                                            await FirebaseAuth.instance
+                                                .signInWithCredential(
+                                                  phoneAuthCredential,
+                                                );
+
+                                        // If successful, user exists - proceed to OTP verification
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => OtpVerifyPage(
+                                                  mobileNumber: completeNumber,
+                                                  verificationId:
+                                                      phoneAuthCredential
+                                                          .verificationId ??
+                                                      '',
+                                                ),
+                                          ),
+                                        );
+                                      } on FirebaseAuthException catch (e) {
+                                        // If user doesn't exist, navigate to registration
+                                        if (e.code == 'user-not-found') {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => RegisterPage(),
+                                            ),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                "Error: ${e.message}",
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    verificationFailed: (error) {
+                                      Navigator.pop(context); // Remove loading
+                                      logger.e(
+                                        "Verification Failed: ${error.message}",
+                                      );
+                                      String errorMessage =
+                                          error.message ??
+                                          'Verification failed';
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(errorMessage)),
+                                      );
+                                    },
+                                    codeSent: (
+                                      verificationId,
+                                      forceResendingToken,
+                                    ) {
+                                      Navigator.pop(context); // Remove loading
+                                      // For code sent, we assume the number might be registered
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => OtpVerifyPage(
+                                                mobileNumber: completeNumber,
+                                                verificationId: verificationId,
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    codeAutoRetrievalTimeout: (verificationId) {
+                                      Navigator.pop(context); // Remove loading
+                                      logger.i("Auto retrieval timeout");
+                                    },
+                                    timeout: Duration(seconds: 60),
+                                  );
+                                } catch (e) {
+                                  Navigator.pop(
+                                    context,
+                                  ); // Remove loading if still showing
+                                  logger.e("Error in phone verification: $e");
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "An error occurred. Please try again later.",
+                                      ),
+                                    ),
+                                  );
+                                }
                               },
                               child: Text(
                                 "Next",

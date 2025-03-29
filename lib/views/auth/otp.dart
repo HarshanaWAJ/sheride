@@ -1,11 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/web.dart';
+import 'package:sheride/views/auth/login.dart';
 
 class OtpVerifyPage extends StatefulWidget {
   final String mobileNumber;
-
-  const OtpVerifyPage({super.key, required this.mobileNumber});
+  final String verificationId;
+  const OtpVerifyPage({
+    super.key,
+    required this.mobileNumber,
+    required this.verificationId,
+  });
 
   @override
   _OtpVerifyPageState createState() => _OtpVerifyPageState();
@@ -31,25 +38,31 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
   }
 
   // Function to handle OTP verification
-  void verifyOtp() {
+  void verifyOtp() async {
     String enteredOtp =
         otp.join(); // Combine the OTP digits into a single string
-
     if (enteredOtp.length == 6) {
-      // Call your OTP verification logic here (e.g., an API request)
       logger.i("OTP Entered: $enteredOtp");
 
-      // Dummy verification logic (you would replace this with actual API call)
-      if (enteredOtp == "123456") {
-        // Success logic
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("OTP Verified Successfully")));
-      } else {
-        // Failure logic
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Invalid OTP")));
+      try {
+        // OTP Verification
+        final cred = PhoneAuthProvider.credential(
+          verificationId: widget.verificationId,
+          smsCode: enteredOtp,
+        );
+
+        // Sign in with credential asynchronously
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithCredential(cred);
+
+        // Handle successful login if needed
+        logger.i("User signed in: ${userCredential.user?.uid}");
+      } catch (e) {
+        // Handle errors (e.g., wrong OTP or network issues)
+        logger.e("Error during OTP verification: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("OTP verification failed. Please try again.")),
+        );
       }
     } else {
       // Show a message if the OTP is incomplete
@@ -135,14 +148,52 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
                           SizedBox(height: screenHeight * 0.03),
                           Container(
                             padding: EdgeInsets.only(left: 10, right: 10),
-                            child: Text(
-                              "We have sent the verification code to your mobile number",
-                              style: GoogleFonts.roboto(
-                                color: const Color.fromARGB(255, 102, 102, 102),
+                            child: RichText(
+                              textAlign: TextAlign.left,
+                              text: TextSpan(
+                                text: "We have sent the verification code to ",
+                                style: GoogleFonts.roboto(
+                                  color: Colors.grey.shade700,
+                                  fontSize: screenWidth * 0.035,
+                                  letterSpacing: 1,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: formatMobileNumber(
+                                      widget.mobileNumber,
+                                    ), // Use the formatted mobile number
+                                    style: GoogleFonts.roboto(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                      color:
+                                          Colors
+                                              .grey
+                                              .shade700, // Style for the mobile number
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: " Change Number?",
+                                    style: GoogleFonts.roboto(
+                                      color: Colors.pink,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    recognizer:
+                                        TapGestureRecognizer()
+                                          ..onTap = () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) => LoginPage(),
+                                              ),
+                                            );
+                                          },
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                          SizedBox(height: screenHeight * 0.01),
+                          SizedBox(height: screenHeight * 0.025),
 
                           // Input Field for OTP
                           Padding(
@@ -225,5 +276,15 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
         ),
       ),
     );
+  }
+
+  formatMobileNumber(String mobileNumber) {
+    if (mobileNumber.length >= 6) {
+      // Show first 3 digits, replace middle with asterisks, and show last 3 digits
+      return "${mobileNumber.substring(0, 3)}****${mobileNumber.substring(mobileNumber.length - 3)}";
+    } else {
+      // If the number is too short (less than 6 digits), return it as is
+      return mobileNumber;
+    }
   }
 }
