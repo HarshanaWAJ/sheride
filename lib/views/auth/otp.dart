@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/web.dart';
 import 'package:sheride/views/auth/login.dart';
+import 'package:sheride/views/auth/register.dart';
+import 'package:sheride/views/home.dart';
+import 'package:sheride/utils/login_reg_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpVerifyPage extends StatefulWidget {
   final String mobileNumber;
@@ -54,9 +58,37 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
         // Sign in with credential asynchronously
         UserCredential userCredential = await FirebaseAuth.instance
             .signInWithCredential(cred);
+        final uid = userCredential.user?.uid;
+        try {
+          if (uid != null) {
+            // Check User ID
+            bool existUser = await AuthUtils.doesUserExist(widget.mobileNumber);
+            logger.i("User Detais found: $existUser");
 
-        // Handle successful login if needed
-        logger.i("User signed in: ${userCredential.user?.uid}");
+            // Handle Login and Registration
+            if (existUser == true) {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.setString('user_uid', uid); // Saving the UID
+
+              // Navigate to the Home Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+              );
+            } else {
+              // Navigate to Register Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RegisterPage()),
+              );
+            }
+          }
+        } catch (e) {
+          logger.e("Error with login registration utils");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Login Failed! with error: $e")),
+          );
+        }
       } catch (e) {
         // Handle errors (e.g., wrong OTP or network issues)
         logger.e("Error during OTP verification: $e");
