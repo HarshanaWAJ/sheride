@@ -160,6 +160,7 @@ class LoginPage extends StatelessWidget {
 
                                       try {
                                         // Try to sign in with the credential
+                                        // ignore: unused_local_variable
                                         UserCredential userCredential =
                                             await FirebaseAuth.instance
                                                 .signInWithCredential(
