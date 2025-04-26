@@ -186,7 +186,10 @@ class LoginPage extends StatelessWidget {
                                             context,
                                             MaterialPageRoute(
                                               builder:
-                                                  (context) => RegisterPage(),
+                                                  (context) => RegisterPage(
+                                                    mobileNumber:
+                                                        completeNumber,
+                                                  ),
                                             ),
                                           );
                                         } else {

@@ -79,7 +79,12 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
               // Navigate to Register Page
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => RegisterPage()),
+                MaterialPageRoute(
+                  builder:
+                      (context) => RegisterPage(
+                        mobileNumber: widget.mobileNumber,
+                      ), // Passing the mobileNumber
+                ),
               );
             }
           }
