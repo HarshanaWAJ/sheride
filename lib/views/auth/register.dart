@@ -3,8 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:sheride/views/auth/login.dart';
 import 'package:sheride/utils/login_reg_utils.dart';
-import 'package:sheride/views/auth/otp.dart';
-import 'package:sheride/views/home.dart'; // Make sure the AuthUtils file is imported
 
 class RegisterPage extends StatefulWidget {
   final String mobileNumber;

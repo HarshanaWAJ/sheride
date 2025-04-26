@@ -7,6 +7,7 @@ import 'package:logger/web.dart';
 import 'package:sheride/views/auth/otp.dart';
 import 'package:sheride/views/auth/register.dart';
 
+// ignore: must_be_immutable
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 

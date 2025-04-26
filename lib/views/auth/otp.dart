@@ -63,8 +63,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
           if (uid != null) {
             // Check User ID
             bool existUser = await AuthUtils.doesUserExist(widget.mobileNumber);
-            logger.i("User Detais found: $existUser");
-
             // Handle Login and Registration
             if (existUser == true) {
               SharedPreferences prefs = await SharedPreferences.getInstance();
